@@ -5,8 +5,12 @@
 #define MAX_LOADSTRING 100
 
 HINSTANCE instance;
-WCHAR MainWindow_title[MAX_LOADSTRING];
-WCHAR MainWindow_class[MAX_LOADSTRING];
+WCHAR windowTitle[MAX_LOADSTRING];
+WCHAR windowClass[MAX_LOADSTRING];
+HWND windowHandle;
+HDC hdc = NULL;
+HFONT monoFont;
+HBRUSH blackBrush;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -19,8 +23,28 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(lpCmdLine);
 	instance = hInstance;
 
-	LoadStringW(instance, IDS_APP_TITLE, MainWindow_title, MAX_LOADSTRING);
-	LoadStringW(instance, IDC_APOC, MainWindow_class, MAX_LOADSTRING);
+
+	monoFont = CreateFontW(
+		48,
+		0,
+		0,
+		0,
+		FW_ULTRABOLD,
+		FALSE,
+		FALSE,
+		FALSE,
+		DEFAULT_CHARSET,
+		OUT_DEFAULT_PRECIS,
+		CLIP_DEFAULT_PRECIS,
+		DRAFT_QUALITY,
+		FF_DONTCARE,
+		TEXT("Courier"));
+
+	blackBrush = CreateSolidBrush(RGB(0, 0, 0));
+
+
+	LoadStringW(instance, IDS_APP_TITLE, windowTitle, MAX_LOADSTRING);
+	LoadStringW(instance, IDC_APOC, windowClass, MAX_LOADSTRING);
 
 	{
 		WNDCLASSEXW wcex;
@@ -31,16 +55,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		wcex.cbWndExtra = 0;
 		wcex.hInstance = instance;
 		wcex.hIcon = LoadIcon(instance, MAKEINTRESOURCE(IDI_APOC));
-		wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+		wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
 		wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 		wcex.lpszMenuName = NULL;
-		wcex.lpszClassName = MainWindow_class;
+		wcex.lpszClassName = windowClass;
 		wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 		RegisterClassExW(&wcex);
 	}
 
-	HWND MainWindow_hwnd = CreateWindowW(MainWindow_class, MainWindow_title, WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+	HWND MainWindow_hwnd = CreateWindowW(windowClass, windowTitle, WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 	if (!MainWindow_hwnd)
 	{
 		return 1;
@@ -53,7 +77,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_APOC));
 
 	MSG msg = {};
-	while (GetMessage(&msg, nullptr, 0, 0))
+	while (GetMessage(&msg, NULL, 0, 0))
 	{
 		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
 		{
@@ -65,34 +89,47 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	return (int)msg.wParam;
 }
 
+void ClearBackgroundToBlack()
+{
+	RECT rc;
+	GetClientRect(windowHandle, &rc);
+	HRGN r = CreateRectRgnIndirect(&rc);
+	FillRgn(hdc, r, blackBrush);
+}
+
+void DrawTestMessage()
+{
+	RECT rc;
+	GetClientRect(windowHandle, &rc);
+	SetBkMode(hdc, TRANSPARENT);
+	SetTextColor(hdc, RGB(255, 255, 255));
+	auto message = L"This is a test message...";
+	ExtTextOut(
+		hdc,
+		0,
+		0,
+		0,
+		&rc,
+		message,
+		lstrlen(message),
+		NULL
+	);
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	windowHandle = hWnd;
+
 	switch (message)
 	{
 	case WM_PAINT:
 	{
 		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hWnd, &ps);
+		hdc = BeginPaint(hWnd, &ps);
 
-		RECT rc;
-		GetClientRect(hWnd, &rc);
-		HRGN bgRgn = CreateRectRgnIndirect(&rc);
-		HBRUSH hBrush = CreateSolidBrush(RGB(0, 0, 0));
-		FillRgn(hdc, bgRgn, hBrush);
-
-		//HBRUSH hBrush2 = CreateSolidBrush(RGB(255, 255, 255));
-		ExtTextOut(
-			hdc,
-			0,
-			0,
-			0,
-			&rc,
-			L"hello",
-			5,
-			nullptr
-		);
-
-		DeleteObject(hBrush);
+		SelectObject(hdc, monoFont);
+		ClearBackgroundToBlack();
+		DrawTestMessage();
 
 		EndPaint(hWnd, &ps);
 	}
