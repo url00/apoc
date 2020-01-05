@@ -1,11 +1,24 @@
-﻿cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.11)
 
-add_executable (apoc "apoc.cpp" "apoc.h")
+
+project(apoc)
+
+
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
+
+add_subdirectory(src)
+
+# If directory-local project is equal to the global project:
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    # Tell generators to make use of folder hierachies.
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+endif()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-	find_package(X11 REQUIRED)
-	target_link_libraries(apoc ${X11_LIBRARIES})
-	include_directories(${X11_INCLUDE_DIR})
+    set(PROJECT_BINARY_DIR "../bin/linux")
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	target_link_libraries(apoc kernel32  user32  gdi32  winspool  comdlg32  advapi32  shell32  ole32  oleaut32  uuid  odbc32  odbccp32 ;)
+    set(PROJECT_BINARY_DIR "../bin/win")
 endif()
