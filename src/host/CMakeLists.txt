@@ -1,5 +1,0 @@
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-	add_subdirectory("linux")
-elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    add_subdirectory("win")
-endif()

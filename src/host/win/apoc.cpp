@@ -12,6 +12,10 @@ HDC hdc = NULL;
 HFONT monoFont;
 HBRUSH blackBrush;
 
+HMODULE lib_displayHandle;
+typedef void* (__cdecl* lib_displayHandle_get_platform_type)(void* (setter(const char*)));
+lib_displayHandle_get_platform_type lib_displayHandle_get_platform;
+
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -23,6 +27,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(lpCmdLine);
 	instance = hInstance;
 
+	lib_displayHandle = LoadLibrary(TEXT("lib_display.dll"));
+	if (lib_displayHandle != NULL)
+	{
+		lib_displayHandle_get_platform = (lib_displayHandle_get_platform_type)GetProcAddress(lib_displayHandle, "get_platform");
+		if (lib_displayHandle_get_platform == NULL)
+		{
+			return 1;
+		}
+	}
 
 	monoFont = CreateFontW(
 		48,
@@ -97,13 +110,23 @@ void ClearBackgroundToBlack()
 	FillRgn(hdc, r, blackBrush);
 }
 
+char test_buffer[256];
+
+void* get_platform_impl(const char* platform)
+{
+	strncpy(test_buffer, platform, strlen(platform));
+	return nullptr;
+}
+
 void DrawTestMessage()
 {
 	RECT rc;
 	GetClientRect(windowHandle, &rc);
 	SetBkMode(hdc, TRANSPARENT);
 	SetTextColor(hdc, RGB(255, 255, 255));
-	auto message = L"This is a test message...";
+	lib_displayHandle_get_platform(get_platform_impl);
+	TCHAR message[256];
+	mbstowcs(message, test_buffer, 256);
 	ExtTextOut(
 		hdc,
 		0,
