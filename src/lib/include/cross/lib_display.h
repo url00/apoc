@@ -8,9 +8,10 @@
 
 extern "C"
 {
-	void* prime_message(char* message, const int message_length);
-	void* update_display();
-	EXPORT void* get_platform(void* (setter(const char*)));
+	EXPORT void* get_platform();
+	EXPORT void show_debug_info();
+	EXPORT void print_debug(void* message);
+	EXPORT void connect_lib(void* host);
 }
 
 #endif

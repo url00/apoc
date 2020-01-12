@@ -1,6 +1,7 @@
 ﻿#include "framework.h"
 #include "apoc.h"
 #include "Wingdi.h"
+#include "../../lib/include/win/lib_display_win.h"
 
 #define MAX_LOADSTRING 100
 
@@ -13,8 +14,19 @@ HFONT monoFont;
 HBRUSH blackBrush;
 
 HMODULE lib_displayHandle;
-typedef void* (__cdecl* lib_displayHandle_get_platform_type)(void* (setter(const char*)));
-lib_displayHandle_get_platform_type lib_displayHandle_get_platform;
+
+void WinHost_QueueStringForDisplay(LPWSTR s)
+{
+	;
+}
+static struct WinHost WinHost = { WinHost_QueueStringForDisplay };
+
+typedef void* (__cdecl* lib_display__connect_lib_type)(struct WinHost*);
+static lib_display__connect_lib_type lib_display__connect_lib;
+
+typedef void(__cdecl* lib_display__show_debug_info_type)();
+static lib_display__show_debug_info_type lib_display__show_debug_info;
+
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -30,10 +42,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	lib_displayHandle = LoadLibrary(TEXT("lib_display.dll"));
 	if (lib_displayHandle != NULL)
 	{
-		lib_displayHandle_get_platform = (lib_displayHandle_get_platform_type)GetProcAddress(lib_displayHandle, "get_platform");
-		if (lib_displayHandle_get_platform == NULL)
+		lib_display__connect_lib = (lib_display__connect_lib_type)GetProcAddress(lib_displayHandle, "connect_lib");
+		if (lib_display__connect_lib == NULL)
 		{
 			return 1;
+		}
+		else
+		{
+			lib_display__connect_lib(&WinHost);
+		}
+		lib_display__show_debug_info = (lib_display__show_debug_info_type)GetProcAddress(lib_displayHandle, "show_debug_info");
+		if (lib_display__show_debug_info == NULL)
+		{
+			return 1;
+		}
+		else
+		{
+			lib_display__show_debug_info();
 		}
 	}
 
@@ -110,23 +135,14 @@ void ClearBackgroundToBlack()
 	FillRgn(hdc, r, blackBrush);
 }
 
-char test_buffer[256];
-
-void* get_platform_impl(const char* platform)
-{
-	strncpy(test_buffer, platform, strlen(platform));
-	return nullptr;
-}
-
 void DrawTestMessage()
 {
 	RECT rc;
 	GetClientRect(windowHandle, &rc);
 	SetBkMode(hdc, TRANSPARENT);
 	SetTextColor(hdc, RGB(255, 255, 255));
-	lib_displayHandle_get_platform(get_platform_impl);
-	TCHAR message[256];
-	mbstowcs(message, test_buffer, 256);
+	//lib_displayHandle_get_platform(get_platform_impl);
+	/*TCHAR message[256];
 	ExtTextOut(
 		hdc,
 		0,
@@ -136,7 +152,7 @@ void DrawTestMessage()
 		message,
 		lstrlen(message),
 		NULL
-	);
+	);*/
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)

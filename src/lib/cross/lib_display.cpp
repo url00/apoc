@@ -1,19 +1,14 @@
-﻿#include <Windows.h>
-#include "../include/lib_display.h"
+﻿#include "../include/cross/lib_display.h"
+
+#ifdef WIN32
+#define EXPORT __declspec( dllexport )
+#endif
 
 extern "C"
 {
-	/*
-	typedef struct DisplayState
+	EXPORT void show_debug_info()
 	{
-		void (*prime_message)(char*, int);
-	} DisplayState;
-
-	DisplayState __state = {};
-	*/
-
-	void* get_platform(void* (setter(const char*)))
-	{
-		return setter("win");
+		auto p = get_platform();
+		print_debug(p);
 	}
 }
