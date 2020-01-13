@@ -1,4 +1,4 @@
-﻿#include "../include/cross/lib_display.h"
+﻿#include "lib_display.h"
 
 #ifdef WIN32
 #define EXPORT __declspec( dllexport )

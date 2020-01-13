@@ -74,6 +74,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\..\..\bin\win</OutDir>
     <IntDir>..\..\..\out\win</IntDir>
+    <IncludePath>$(MSBuildProjectDirectory);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -153,13 +154,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="apoc.h" />
+    <ClInclude Include="..\..\..\src\host\apoc_win.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="apoc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="apoc.rc" />
@@ -167,6 +165,9 @@
   <ItemGroup>
     <Image Include="apoc.ico" />
     <Image Include="small.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\host\apoc_win.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

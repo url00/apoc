@@ -157,15 +157,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\cross\lib_display.h" />
-    <ClInclude Include="..\include\win\lib_display_win.h" />
+    <ClInclude Include="..\..\..\src\lib\lib_display.h" />
+    <ClInclude Include="..\..\..\src\lib\lib_display_win.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\cross\lib_display.cpp" />
+    <ClCompile Include="..\..\..\src\lib\lib_display.cpp" />
+    <ClCompile Include="..\..\..\src\lib\lib_display_win.cpp" />
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="lib_display_win.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

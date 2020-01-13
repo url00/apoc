@@ -3,12 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29403.142
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "apoc", "apoc.vcxproj", "{7FF70691-FDB3-4D22-9F8A-977970E9BF14}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "apoc", "apoc\apoc.vcxproj", "{7FF70691-FDB3-4D22-9F8A-977970E9BF14}"
 	ProjectSection(ProjectDependencies) = postProject
 		{F1A106E0-3803-4987-A077-E8889527F11A} = {F1A106E0-3803-4987-A077-E8889527F11A}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lib_display", "..\..\lib\win\lib_display.vcxproj", "{F1A106E0-3803-4987-A077-E8889527F11A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lib_display", "lib_display\lib_display.vcxproj", "{F1A106E0-3803-4987-A077-E8889527F11A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

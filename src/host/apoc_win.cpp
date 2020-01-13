@@ -1,7 +1,7 @@
 ﻿#include "framework.h"
-#include "apoc.h"
+#include "apoc_win.h"
 #include "Wingdi.h"
-#include "../../lib/include/win/lib_display_win.h"
+#include "../lib/lib_display_win.h"
 
 #define MAX_LOADSTRING 100
 
