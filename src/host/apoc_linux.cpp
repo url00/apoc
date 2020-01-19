@@ -5,7 +5,10 @@
 #include <cstdlib>
 
 Display *dis;
-int screen;
+Screen *screen;
+int screen_id;
+int screen_width;
+int screen_height;
 Window win;
 GC gc;
 
@@ -17,12 +20,17 @@ void init_x()
     /* get the colors black and white (see section for details) */
     unsigned long black, white;
 
-    dis = XOpenDisplay((char *)0);
-    screen = DefaultScreen(dis);
-    black = BlackPixel(dis, screen),
-    white = WhitePixel(dis, screen);
+    dis = XOpenDisplay(NULL);
+    screen_id = DefaultScreen(dis);
+    black = BlackPixel(dis, screen_id),
+    white = WhitePixel(dis, screen_id);
+
+    screen = ScreenOfDisplay(dis, 0);
+    screen_width = WidthOfScreen(screen);
+    screen_height = HeightOfScreen(screen);
+
     win = XCreateSimpleWindow(dis, DefaultRootWindow(dis), 0, 0,
-                              300, 300, 5, black, white);
+                              screen_width, screen_height, 0, white, black);
     XSetStandardProperties(dis, win, "Howdy", "Hi", None, NULL, 0, NULL);
     XSelectInput(dis, win, ExposureMask | ButtonPressMask | KeyPressMask);
     gc = XCreateGC(dis, win, 0, 0);
