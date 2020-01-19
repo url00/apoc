@@ -1,6 +1,3 @@
-import subprocess
-import time
-import os
 from waflib.Task import Task
 
 APPNAME = "apoc"
@@ -8,46 +5,26 @@ VERSION = "1.0"
 
 top = "."
 out = "../../out/linux"
+src = "../../src"
+bin = "../../bin/linux"
 
 
-class cp(Task):
-    def run(self):
-        return self.exec_command(
-            "cp %s %s" % (self.inputs[0].abspath(), self.outputs[0].abspath())
-        )
+def options(opt):
+    opt.load("compiler_cxx")
 
 
-class cat(Task):
-    def run(self):
-        return self.exec_command(
-            "cat %s %s > %s"
-            % (
-                self.inputs[0].abspath(),
-                self.inputs[1].abspath(),
-                self.outputs[0].abspath(),
-            )
-        )
+def configure(conf):
+    conf.load("compiler_cxx")
+    conf.check_cfg(atleast_pkgconfig_version="0.0.0")
+    conf.check_cfg(
+        path="pkg-config", args="--cflags --libs", package="x11", uselib_store="X11"
+    )
 
 
-def configure(ctx):
-    pass
-
-
-def build(ctx):
-    cp1 = cp(env=ctx.env)
-    cp1.set_inputs(ctx.path.find_resource("wscript"))
-    cp1.set_outputs(ctx.path.find_or_declare("foo.txt"))
-    ctx.add_to_group(cp1)
-
-    cp2 = cp(env=ctx.env)
-    cp2.set_inputs(ctx.path.find_resource("wscript"))
-    cp2.set_outputs(ctx.path.find_or_declare("bar.txt"))
-    ctx.add_to_group(cp2)
-
-    cat1 = cat(env=ctx.env)
-    cat1.set_inputs(cp1.outputs + cp2.outputs)
-    cat1.set_outputs(ctx.path.find_or_declare("foobar.txt"))
-    ctx.add_to_group(cat1)
+def build(bld):
+    bld.program(source="%s/host/apoc_linux.cpp" % src, target="app", use=["X11"])
+    # bld.program(source="%s/host/apoc_linux.cpp" % src, target="app", stlib=["x11"])
+    bld(rule="cp ${SRC} ${TGT}", source="%s/app" % out, target="%s/app" % bin)
 
 
 # def distclean(ctx):
