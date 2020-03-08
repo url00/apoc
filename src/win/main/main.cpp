@@ -18,6 +18,7 @@ int LoadLauncher();
 HMODULE launcher_handle = NULL;
 GetLauncherMenu_Proc launcher_GetLauncherMenu;
 GetLauncherMenu_Length_Proc launcher_GetLauncherMenu_Length;
+PaintSometing_Proc launcher_PaintSometing;
 
 void Invalidate()
 {
@@ -44,6 +45,11 @@ int LoadLauncher()
     }
     launcher_GetLauncherMenu_Length = (GetLauncherMenu_Length_Proc)GetProcAddress(launcher_handle, "GetLauncherMenu_Length");
     if (launcher_GetLauncherMenu_Length == NULL)
+    {
+        return 1;
+    }
+    launcher_PaintSometing = (PaintSometing_Proc)GetProcAddress(launcher_handle, "PaintSometing");
+    if (launcher_PaintSometing == NULL)
     {
         return 1;
     }
@@ -221,6 +227,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         SelectObject(hdc, monoFont);
         ClearBackgroundToBlack();
         DrawMenu();
+        launcher_PaintSometing(hWnd, hdc);
 
         EndPaint(hWnd, &ps);
         break;
