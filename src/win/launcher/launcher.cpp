@@ -24,7 +24,7 @@ void PaintSometing(HWND hWnd, HDC hdc)
     int savedDC = SaveDC(backbuffDC);
     SelectObject(backbuffDC, backbuffer);
     HBRUSH hBrush = CreateSolidBrush(RGB(255, 255, 255));
-    FillRect(backbuffDC, &rect, hBrush);
+    // FillRect(backbuffDC, &rect, hBrush);
     DeleteObject(hBrush);
 
     SelectObject(backbuffDC, GetStockObject(DC_BRUSH));
@@ -34,10 +34,10 @@ void PaintSometing(HWND hWnd, HDC hdc)
 
     for (int i = 0; i < 10; i++)
     {
-        Rectangle(backbuffDC, 40, 80, 500, 500);
+        Rectangle(backbuffDC, 40, 80, 250, 900);
     }
 
-    BitBlt(hdc, 0, 0, rect.right, rect.bottom, backbuffDC, 0, 0, SRCCOPY);
+    // BitBlt(hdc, 0, 0, rect.right, rect.bottom, backbuffDC, 0, 0, SRCCOPY);
     RestoreDC(backbuffDC, savedDC);
 
     DeleteObject(backbuffer);
