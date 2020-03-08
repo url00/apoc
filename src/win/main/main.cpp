@@ -21,7 +21,7 @@ GetLauncherMenu_Length_Proc launcher_GetLauncherMenu_Length;
 
 void Invalidate()
 {
-    MessageBoxW(MainWindow_hwnd, L"Would be invalidating now...", L"Would be invalidating now...", 0);
+    InvalidateRect(MainWindow_hwnd, NULL, TRUE);
 }
 
 int LoadLauncher()
