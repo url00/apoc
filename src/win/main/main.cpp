@@ -4,6 +4,7 @@
 #include "launcher.h"
 
 HINSTANCE instance;
+HWND MainWindow_hwnd;
 const unsigned int windowTitle_maxSize = 100;
 WCHAR windowTitle[windowTitle_maxSize] = L"apoc";
 const unsigned int windowClass_maxSize = 100;
@@ -20,6 +21,7 @@ GetLauncherMenu_Length_Proc launcher_GetLauncherMenu_Length;
 
 void Invalidate()
 {
+    MessageBoxW(MainWindow_hwnd, L"Would be invalidating now...", L"Would be invalidating now...", 0);
 }
 
 int LoadLauncher()
@@ -58,12 +60,17 @@ void ChangeTracker_OnChange()
 DWORD ChangeTracker_bytes_changed;
 FILE_NOTIFY_INFORMATION ChangeTracker_changes[100];
 OVERLAPPED ChangeTracker_overlapped = {};
-HANDLE ChangeTracker_cwd;
+HANDLE ChangeTracker_cwd = NULL;
 
-void ChangeTracker_Setup()
+void ChangeTracker_Reset()
 {
+    SetTimer(MainWindow_hwnd, 2, 500, NULL);
     WCHAR cwd_path[256];
     GetCurrentDirectoryW(256, cwd_path);
+    if (ChangeTracker_cwd != NULL)
+    {
+        CloseHandle(ChangeTracker_cwd);
+    }
     ChangeTracker_cwd = CreateFileW(
         cwd_path,
         GENERIC_READ,
@@ -138,10 +145,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return 1;
     }
 
-    ChangeTracker_Setup();
-
-    HWND MainWindow_hwnd = CreateWindowW(windowClass, windowTitle, WS_OVERLAPPEDWINDOW,
-                                         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+    MainWindow_hwnd = CreateWindowW(windowClass, windowTitle, WS_OVERLAPPEDWINDOW,
+                                    CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
     if (!MainWindow_hwnd)
     {
         return 1;
@@ -149,7 +154,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     ShowWindow(MainWindow_hwnd, nCmdShow);
     UpdateWindow(MainWindow_hwnd);
 
-    SetTimer(MainWindow_hwnd, 2, 500, NULL);
+    ChangeTracker_Reset();
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(0));
 
@@ -235,8 +240,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             auto result = GetOverlappedResult(ChangeTracker_cwd, &ChangeTracker_overlapped, &bytesTransferred, false);
             if (result)
             {
+                KillTimer(MainWindow_hwnd, 2);
                 ResetEvent(ChangeTracker_overlapped.hEvent);
                 ChangeTracker_OnChange();
+                ChangeTracker_Reset();
             }
             else
             {
