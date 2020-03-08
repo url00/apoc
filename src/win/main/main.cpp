@@ -16,10 +16,11 @@ HBRUSH blackBrush;
 int LoadLauncher();
 HMODULE launcher_handle = NULL;
 GetLauncherMenu_Proc launcher_GetLauncherMenu;
-GetLauncherMenu_Count_Proc launcher_GetLauncherMenu_Count;
+GetLauncherMenu_Length_Proc launcher_GetLauncherMenu_Length;
 
-DWORD cwd_change_bytes_changed;
-FILE_NOTIFY_INFORMATION cwd_changes[100];
+void Invalidate()
+{
+}
 
 int LoadLauncher()
 {
@@ -28,10 +29,7 @@ int LoadLauncher()
         FreeLibrary(launcher_handle);
     }
 
-    WCHAR cwd_path[256];
-    GetCurrentDirectoryW(256, cwd_path);
     CopyFileW(L"launcher.dll", L"launcher_.dll", false);
-    auto err = GetLastError();
     launcher_handle = LoadLibraryExW(L"launcher_.dll", NULL, NULL);
     if (launcher_handle == NULL)
     {
@@ -42,8 +40,8 @@ int LoadLauncher()
     {
         return 1;
     }
-    launcher_GetLauncherMenu_Count = (GetLauncherMenu_Count_Proc)GetProcAddress(launcher_handle, "GetLauncherMenu_Count");
-    if (launcher_GetLauncherMenu_Count == NULL)
+    launcher_GetLauncherMenu_Length = (GetLauncherMenu_Length_Proc)GetProcAddress(launcher_handle, "GetLauncherMenu_Length");
+    if (launcher_GetLauncherMenu_Length == NULL)
     {
         return 1;
     }
@@ -51,18 +49,45 @@ int LoadLauncher()
     return 0;
 }
 
-void CheckForDirectoryChanges()
+void ChangeTracker_OnChange(
+    DWORD dwErrorCode,
+    DWORD dwNumberOfBytesTransfered,
+    LPOVERLAPPED lpOverlapped)
+{
+    LoadLauncher();
+    Invalidate();
+}
+
+DWORD ChangeTracker_bytes_changed;
+FILE_NOTIFY_INFORMATION ChangeTracker_changes[100];
+OVERLAPPED ChangeTracker_overlapped;
+
+void ChangeTracker_Setup()
 {
     WCHAR cwd_path[256];
     GetCurrentDirectoryW(256, cwd_path);
-    auto cwd = CreateFileW(cwd_path, GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (ReadDirectoryChangesW(cwd, &cwd_changes, sizeof(cwd_changes), false, FILE_NOTIFY_CHANGE_LAST_WRITE, &cwd_change_bytes_changed, NULL, NULL))
+    auto cwd = CreateFileW(
+        cwd_path,
+        GENERIC_READ,
+        FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
+        NULL,
+        OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
+        NULL);
+    auto didReadError = ReadDirectoryChangesW(
+                            cwd,
+                            &ChangeTracker_changes,
+                            sizeof(ChangeTracker_changes),
+                            false,
+                            FILE_NOTIFY_CHANGE_LAST_WRITE,
+                            &ChangeTracker_bytes_changed,
+                            &ChangeTracker_overlapped,
+                            (LPOVERLAPPED_COMPLETION_ROUTINE)&ChangeTracker_OnChange) == 0;
+    if (didReadError)
     {
         auto err = GetLastError();
         return;
     }
-
-    LoadLauncher();
 }
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -113,6 +138,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return 1;
     }
 
+    ChangeTracker_Setup();
+
     HWND MainWindow_hwnd = CreateWindowW(windowClass, windowTitle, WS_OVERLAPPEDWINDOW,
                                          CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
     if (!MainWindow_hwnd)
@@ -152,7 +179,7 @@ void DrawMenu()
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, RGB(255, 255, 255));
 
-    auto menu_size = launcher_GetLauncherMenu_Count();
+    auto menu_size = launcher_GetLauncherMenu_Length();
     for (size_t i = 0; i < menu_size; i++)
     {
         WCHAR message[256];
@@ -181,7 +208,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_PAINT:
     {
-        CheckForDirectoryChanges();
         PAINTSTRUCT ps;
         hdc = BeginPaint(hWnd, &ps);
 
@@ -196,6 +222,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0);
         break;
     default:
+        // Causes it to "work".
+        // SleepEx(1, TRUE);
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
     return 0;

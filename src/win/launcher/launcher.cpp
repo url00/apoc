@@ -7,7 +7,7 @@ const LPWSTR *GetLauncherMenu()
     return menu;
 }
 
-const size_t GetLauncherMenu_Count()
+const size_t GetLauncherMenu_Length()
 {
     return 2;
 }
