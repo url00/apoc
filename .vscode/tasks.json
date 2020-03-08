@@ -5,6 +5,7 @@
       "label": "cl.exe build main",
       "command": "cl.exe",
       "args": [
+        "/I.\\src\\win\\launcher",
         "/Zi",
         "/EHsc",
         "/Fd:",
@@ -13,7 +14,7 @@
         ".\\out\\win\\main.obj",
         "/Fe:",
         ".\\bin\\win\\main.exe",
-        ".\\src\\win\\main.cpp",
+        ".\\src\\win\\main\\main.cpp",
         "kernel32.lib",
         "user32.lib",
         "gdi32.lib",
@@ -27,6 +28,38 @@
         "odbc32.lib",
         "odbccp32.lib"
       ]
+    },
+    {
+      "type": "shell",
+      "label": "cl.exe build launcher",
+      "command": "cl.exe",
+      "args": [
+        "/Zi",
+        "/EHsc",
+        "/D_USRDLL",
+        "/D_WINDLL",
+        "/Fd:",
+        ".\\out\\win\\launcher.pdb",
+        "/Fo:",
+        ".\\out\\win\\launcher.obj",
+        ".\\src\\win\\launcher\\launcher.cpp",
+        "kernel32.lib",
+        "user32.lib",
+        "gdi32.lib",
+        "winspool.lib",
+        "comdlg32.lib",
+        "advapi32.lib",
+        "shell32.lib",
+        "ole32.lib",
+        "oleaut32.lib",
+        "uuid.lib",
+        "odbc32.lib",
+        "odbccp32.lib",
+        "/link",
+        "/DLL",
+        "/OUT:launcher.dll"
+      ],
+      "problemMatcher": []
     }
   ],
   "version": "2.0.0"
