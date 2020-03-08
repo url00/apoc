@@ -34,12 +34,9 @@
       "label": "cl.exe build launcher",
       "command": "cl.exe",
       "args": [
-        "/Zi",
         "/EHsc",
         "/D_USRDLL",
         "/D_WINDLL",
-        "/Fd:",
-        ".\\out\\win\\launcher.pdb",
         "/Fo:",
         ".\\out\\win\\launcher.obj",
         ".\\src\\win\\launcher\\launcher.cpp",

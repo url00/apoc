@@ -1,6 +1,6 @@
 #include "launcher.h"
 
-static const LPWSTR menu[] = {L"Test 1", L"Test 20000"};
+static const LPWSTR menu[] = {L"Test 1", L"cool 3"};
 
 const LPWSTR *GetLauncherMenu()
 {

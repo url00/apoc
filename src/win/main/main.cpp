@@ -19,15 +19,7 @@ GetLauncherMenu_Proc launcher_GetLauncherMenu;
 GetLauncherMenu_Count_Proc launcher_GetLauncherMenu_Count;
 
 DWORD cwd_change_bytes_changed;
-FILE_NOTIFY_INFORMATION cwd_changes = {};
-
-void CwdHasChanges(
-    DWORD dwErrorCode,
-    DWORD dwNumberOfBytesTransfered,
-    LPOVERLAPPED lpOverlapped)
-{
-    LoadLauncher();
-}
+FILE_NOTIFY_INFORMATION cwd_changes[100];
 
 int LoadLauncher()
 {
@@ -64,7 +56,13 @@ void CheckForDirectoryChanges()
     WCHAR cwd_path[256];
     GetCurrentDirectoryW(256, cwd_path);
     auto cwd = CreateFileW(cwd_path, GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    ReadDirectoryChangesW(cwd, &cwd_changes, sizeof(cwd_changes), false, FILE_NOTIFY_CHANGE_LAST_WRITE, &cwd_change_bytes_changed, NULL, (LPOVERLAPPED_COMPLETION_ROUTINE)&CwdHasChanges);
+    if (ReadDirectoryChangesW(cwd, &cwd_changes, sizeof(cwd_changes), false, FILE_NOTIFY_CHANGE_LAST_WRITE, &cwd_change_bytes_changed, NULL, NULL))
+    {
+        auto err = GetLastError();
+        return;
+    }
+
+    LoadLauncher();
 }
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
