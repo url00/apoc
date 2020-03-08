@@ -57,7 +57,7 @@
         "odbccp32.lib",
         "/link",
         "/DLL",
-        "/OUT:launcher.dll"
+        "/OUT:.\\bin\\win\\launcher.dll"
       ],
       "problemMatcher": []
     }

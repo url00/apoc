@@ -19,21 +19,20 @@ void WinHost_QueueStringForDisplay(LPWSTR s)
 {
 	;
 }
-static struct WinHost WinHost = { WinHost_QueueStringForDisplay };
+static struct WinHost WinHost = {WinHost_QueueStringForDisplay};
 
-typedef void* (__cdecl* lib_display__connect_lib_type)(struct WinHost*);
+typedef void *(__cdecl *lib_display__connect_lib_type)(struct WinHost *);
 static lib_display__connect_lib_type lib_display__connect_lib;
 
-typedef void(__cdecl* lib_display__show_debug_info_type)();
+typedef void(__cdecl *lib_display__show_debug_info_type)();
 static lib_display__show_debug_info_type lib_display__show_debug_info;
-
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-	_In_opt_ HINSTANCE hPrevInstance,
-	_In_ LPWSTR    lpCmdLine,
-	_In_ int       nCmdShow)
+					  _In_opt_ HINSTANCE hPrevInstance,
+					  _In_ LPWSTR lpCmdLine,
+					  _In_ int nCmdShow)
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
@@ -80,7 +79,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	blackBrush = CreateSolidBrush(RGB(0, 0, 0));
 
-
 	LoadStringW(instance, IDS_APP_TITLE, windowTitle, MAX_LOADSTRING);
 	LoadStringW(instance, IDC_APOC, windowClass, MAX_LOADSTRING);
 
@@ -102,15 +100,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 
 	HWND MainWindow_hwnd = CreateWindowW(windowClass, windowTitle, WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+										 CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 	if (!MainWindow_hwnd)
 	{
 		return 1;
 	}
 	ShowWindow(MainWindow_hwnd, nCmdShow);
 	UpdateWindow(MainWindow_hwnd);
-
-
 
 	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_APOC));
 
@@ -135,7 +131,7 @@ void ClearBackgroundToBlack()
 	FillRgn(hdc, r, blackBrush);
 }
 
-void DrawTestMessage()
+void DrawMenu()
 {
 	RECT rc;
 	GetClientRect(windowHandle, &rc);
@@ -168,7 +164,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		SelectObject(hdc, monoFont);
 		ClearBackgroundToBlack();
-		DrawTestMessage();
+		DrawMenu();
 
 		EndPaint(hWnd, &ps);
 	}

@@ -14,6 +14,8 @@ HFONT monoFont;
 HBRUSH blackBrush;
 
 HMODULE launcher_handle;
+GetLauncherMenu_Proc launcher_GetLauncherMenu;
+GetLauncherMenu_Count_Proc launcher_GetLauncherMenu_Count;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -63,6 +65,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     {
         return 1;
     }
+    launcher_GetLauncherMenu = (GetLauncherMenu_Proc)GetProcAddress(launcher_handle, "GetLauncherMenu");
+    if (launcher_GetLauncherMenu == NULL)
+    {
+        return 1;
+    }
+    launcher_GetLauncherMenu_Count = (GetLauncherMenu_Count_Proc)GetProcAddress(launcher_handle, "GetLauncherMenu_Count");
+    if (launcher_GetLauncherMenu_Count == NULL)
+    {
+        return 1;
+    }
 
     HWND MainWindow_hwnd = CreateWindowW(windowClass, windowTitle, WS_OVERLAPPEDWINDOW,
                                          CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
@@ -96,32 +108,32 @@ void ClearBackgroundToBlack()
     FillRgn(hdc, r, blackBrush);
 }
 
-static unsigned int x = 0;
-static unsigned int y = 0;
-
-void DrawTestMessage()
+void DrawMenu()
 {
     RECT rc;
     GetClientRect(windowHandle, &rc);
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, RGB(255, 255, 255));
-    TCHAR message[256];
-    // USES_CONVERSION;
-    // _tcscpy(message, A2T((LPSTR)GetLauncherMenu()[0]));
 
-    x = x + 1;
-    x = x % rc.right;
-    y = y + 1;
-    y = y % rc.bottom;
-    ExtTextOut(
-        hdc,
-        x,
-        y,
-        0,
-        &rc,
-        message,
-        lstrlen(message),
-        NULL);
+    auto menu_size = launcher_GetLauncherMenu_Count();
+    for (size_t i = 0; i < menu_size; i++)
+    {
+        WCHAR message[256];
+        wcscpy(message, launcher_GetLauncherMenu()[i]);
+        auto message_length = wcslen(message);
+        SIZE message_size = {};
+        GetTextExtentPoint32W(hdc, message, message_length, &message_size);
+        int y = 0 + ((message_size.cy + 5) * i);
+        ExtTextOutW(
+            hdc,
+            0,
+            y,
+            0,
+            &rc,
+            message,
+            message_length,
+            NULL);
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -137,7 +149,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         SelectObject(hdc, monoFont);
         ClearBackgroundToBlack();
-        DrawTestMessage();
+        DrawMenu();
 
         EndPaint(hWnd, &ps);
     }
