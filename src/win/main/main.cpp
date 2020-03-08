@@ -13,9 +13,59 @@ HDC hdc = NULL;
 HFONT monoFont;
 HBRUSH blackBrush;
 
-HMODULE launcher_handle;
+int LoadLauncher();
+HMODULE launcher_handle = NULL;
 GetLauncherMenu_Proc launcher_GetLauncherMenu;
 GetLauncherMenu_Count_Proc launcher_GetLauncherMenu_Count;
+
+DWORD cwd_change_bytes_changed;
+FILE_NOTIFY_INFORMATION cwd_changes = {};
+
+void CwdHasChanges(
+    DWORD dwErrorCode,
+    DWORD dwNumberOfBytesTransfered,
+    LPOVERLAPPED lpOverlapped)
+{
+    LoadLauncher();
+}
+
+int LoadLauncher()
+{
+    if (launcher_handle != NULL)
+    {
+        FreeLibrary(launcher_handle);
+    }
+
+    WCHAR cwd_path[256];
+    GetCurrentDirectoryW(256, cwd_path);
+    CopyFileW(L"launcher.dll", L"launcher_.dll", false);
+    auto err = GetLastError();
+    launcher_handle = LoadLibraryExW(L"launcher_.dll", NULL, NULL);
+    if (launcher_handle == NULL)
+    {
+        return 1;
+    }
+    launcher_GetLauncherMenu = (GetLauncherMenu_Proc)GetProcAddress(launcher_handle, "GetLauncherMenu");
+    if (launcher_GetLauncherMenu == NULL)
+    {
+        return 1;
+    }
+    launcher_GetLauncherMenu_Count = (GetLauncherMenu_Count_Proc)GetProcAddress(launcher_handle, "GetLauncherMenu_Count");
+    if (launcher_GetLauncherMenu_Count == NULL)
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+void CheckForDirectoryChanges()
+{
+    WCHAR cwd_path[256];
+    GetCurrentDirectoryW(256, cwd_path);
+    auto cwd = CreateFileW(cwd_path, GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    ReadDirectoryChangesW(cwd, &cwd_changes, sizeof(cwd_changes), false, FILE_NOTIFY_CHANGE_LAST_WRITE, &cwd_change_bytes_changed, NULL, (LPOVERLAPPED_COMPLETION_ROUTINE)&CwdHasChanges);
+}
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -60,18 +110,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         RegisterClassExW(&wcex);
     }
 
-    launcher_handle = LoadLibraryExW(L"launcher.dll", NULL, NULL);
-    if (launcher_handle == NULL)
-    {
-        return 1;
-    }
-    launcher_GetLauncherMenu = (GetLauncherMenu_Proc)GetProcAddress(launcher_handle, "GetLauncherMenu");
-    if (launcher_GetLauncherMenu == NULL)
-    {
-        return 1;
-    }
-    launcher_GetLauncherMenu_Count = (GetLauncherMenu_Count_Proc)GetProcAddress(launcher_handle, "GetLauncherMenu_Count");
-    if (launcher_GetLauncherMenu_Count == NULL)
+    if (LoadLauncher() != 0)
     {
         return 1;
     }
@@ -144,6 +183,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_PAINT:
     {
+        CheckForDirectoryChanges();
         PAINTSTRUCT ps;
         hdc = BeginPaint(hWnd, &ps);
 

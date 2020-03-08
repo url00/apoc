@@ -8,10 +8,10 @@
       "name": "cl.exe - Build and debug active file",
       "type": "cppvsdbg",
       "request": "launch",
-      "program": ".\\bin\\win\\main.exe",
+      "program": "main.exe",
       "args": [],
       "stopAtEntry": false,
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}\\bin\\win",
       "environment": [],
       "externalConsole": false,
       "preLaunchTask": "cl.exe build main"
