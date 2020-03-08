@@ -21,7 +21,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                       _In_ int nCmdShow)
 {
     instance = hInstance;
-    monoFont = CreateFontW(
+    monoFont = CreateFont(
         48,
         0,
         0,
@@ -35,7 +35,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         CLIP_DEFAULT_PRECIS,
         DRAFT_QUALITY,
         FF_DONTCARE,
-        (LPCWSTR)TEXT("Courier"));
+        TEXT("System"));
 
     blackBrush = CreateSolidBrush(RGB(0, 0, 0));
 
@@ -88,24 +88,30 @@ void ClearBackgroundToBlack()
     FillRgn(hdc, r, blackBrush);
 }
 
+static unsigned int x = 0;
+static unsigned int y = 0;
+
 void DrawTestMessage()
 {
     RECT rc;
     GetClientRect(windowHandle, &rc);
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, RGB(255, 255, 255));
-    //lib_displayHandle_get_platform(get_platform_impl);
-    /*TCHAR message[256];
-	ExtTextOut(
-		hdc,
-		0,
-		0,
-		0,
-		&rc,
-		message,
-		lstrlen(message),
-		NULL
-	);*/
+    TCHAR message[256] = TEXT("test message");
+
+    x = x + 1;
+    x = x % rc.right;
+    y = y + 1;
+    y = y % rc.bottom;
+    ExtTextOut(
+        hdc,
+        x,
+        y,
+        0,
+        &rc,
+        message,
+        lstrlen(message),
+        NULL);
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
