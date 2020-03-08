@@ -49,10 +49,7 @@ int LoadLauncher()
     return 0;
 }
 
-void ChangeTracker_OnChange(
-    DWORD dwErrorCode,
-    DWORD dwNumberOfBytesTransfered,
-    LPOVERLAPPED lpOverlapped)
+void ChangeTracker_OnChange()
 {
     LoadLauncher();
     Invalidate();
@@ -60,13 +57,14 @@ void ChangeTracker_OnChange(
 
 DWORD ChangeTracker_bytes_changed;
 FILE_NOTIFY_INFORMATION ChangeTracker_changes[100];
-OVERLAPPED ChangeTracker_overlapped;
+OVERLAPPED ChangeTracker_overlapped = {};
+HANDLE ChangeTracker_cwd;
 
 void ChangeTracker_Setup()
 {
     WCHAR cwd_path[256];
     GetCurrentDirectoryW(256, cwd_path);
-    auto cwd = CreateFileW(
+    ChangeTracker_cwd = CreateFileW(
         cwd_path,
         GENERIC_READ,
         FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -74,18 +72,20 @@ void ChangeTracker_Setup()
         OPEN_EXISTING,
         FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
         NULL);
+    ChangeTracker_overlapped.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
     auto didReadError = ReadDirectoryChangesW(
-                            cwd,
+                            ChangeTracker_cwd,
                             &ChangeTracker_changes,
                             sizeof(ChangeTracker_changes),
                             false,
                             FILE_NOTIFY_CHANGE_LAST_WRITE,
                             &ChangeTracker_bytes_changed,
                             &ChangeTracker_overlapped,
-                            (LPOVERLAPPED_COMPLETION_ROUTINE)&ChangeTracker_OnChange) == 0;
+                            NULL) == 0;
     if (didReadError)
     {
         auto err = GetLastError();
+        int a = 0;
         return;
     }
 }
@@ -148,6 +148,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
     ShowWindow(MainWindow_hwnd, nCmdShow);
     UpdateWindow(MainWindow_hwnd);
+
+    SetTimer(MainWindow_hwnd, 2, 500, NULL);
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(0));
 
@@ -216,15 +218,51 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         DrawMenu();
 
         EndPaint(hWnd, &ps);
+        break;
     }
-    break;
     case WM_DESTROY:
+    {
         PostQuitMessage(0);
         break;
+    }
+    case WM_TIMER:
+    {
+        switch (wParam)
+        {
+        case 2:
+        {
+            DWORD bytesTransferred;
+            auto result = GetOverlappedResult(ChangeTracker_cwd, &ChangeTracker_overlapped, &bytesTransferred, false);
+            if (result)
+            {
+                ResetEvent(ChangeTracker_overlapped.hEvent);
+                ChangeTracker_OnChange();
+            }
+            else
+            {
+                auto err = GetLastError();
+                if (err != ERROR_IO_INCOMPLETE)
+                {
+                    int a = 0;
+                }
+            }
+
+            break;
+        }
+        default:
+        {
+
+            break;
+        }
+        }
+        break;
+    }
     default:
+    {
         // Causes it to "work".
         // SleepEx(1, TRUE);
         return DefWindowProc(hWnd, message, wParam, lParam);
+    }
     }
     return 0;
 }
